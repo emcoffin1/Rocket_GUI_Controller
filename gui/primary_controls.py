@@ -1,8 +1,8 @@
-from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QButtonGroup, QCheckBox)
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QButtonGroup, QCheckBox, QComboBox)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
 from controllers import model_maker
-from random_items import label_maker
+from misc.random_items import label_maker
+
 
 
 class PrimaryWindow(QWidget):
@@ -47,6 +47,11 @@ class RightHandController(QWidget):
         left_layout = QVBoxLayout()
         left_panel.setLayout(left_layout)
 
+        # Right side layout/widget
+        right_panel = QWidget()
+        right_layout = QVBoxLayout()
+        right_panel.setLayout(right_layout)
+
         # Items
         rocket = model_maker.Rocket3DWidget()
         option_panel = QButtonGroup()
@@ -56,6 +61,7 @@ class RightHandController(QWidget):
         opt1 = QCheckBox("PvT")
         opt2 = QCheckBox("FvT")
         opt3 = QCheckBox("FvP")
+
         # Add options
         option_panel.addButton(opt1, 1)
         option_panel.addButton(opt2, 2)
@@ -78,10 +84,26 @@ class RightHandController(QWidget):
         left_layout.addStretch(1)
 
         # // ROCKET SIDE // #
+        # Test Picker
+        combo = QComboBox()
+        combo.addItem("No Test")
+        combo.addItem("Leak Test")
+        combo.addItem("Decay Test")
+        combo.addItem("Click Test")
+        combo.addItem("Igniter Test")
+        right_layout.addWidget(combo)
+
+        # Rocket
+        right_layout.addWidget(rocket, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+
 
         # // Splitter and layout format // #
+        right_layout.addStretch(1)
+        left_layout.addStretch(1)
         main_splitter.addWidget(left_panel)
-        main_splitter.addWidget(rocket)
+        main_splitter.addWidget(right_panel)
+        main_splitter.setSizes([700,300])
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(main_splitter)
@@ -97,13 +119,7 @@ class LeftHandController(QWidget):
         right_layout = QVBoxLayout()
 
         # // ITEMS // #
-        #label = label_maker(text="TEST")
-        label = QLabel("TEST")
-        font = QFont()
-        font.setPointSize(400)
-        font.setWeight(QFont.Weight.Bold)
-        label.setFont(font)
-        label.setStyleSheet("color: black")
+        label = label_maker(text="TEST")
         right_layout.addWidget(label)
 
         self.setLayout(right_layout)

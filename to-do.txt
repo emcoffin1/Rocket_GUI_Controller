@@ -1,0 +1,11 @@
+add test guis to the test combobox
+    refer to previous program
+
+make a class for values
+
+make a class for the graphs
+    figure out how to display multiple at once
+    add a scroller if necessary
+        make the size of the graph a ratio of the size of the splitter, so larger splitter = larger graph
+
+dynamically adjust model as splitter moves
