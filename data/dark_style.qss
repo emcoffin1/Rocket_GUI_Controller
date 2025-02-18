@@ -8,6 +8,17 @@ QTabWidget {
     color: #E0E0E0;
 }
 
+QWidget {
+    border-radius: 5px;
+    padding: 3px;
+}
+
+QSplitter::handle {
+                    background-color: black; /* Dark Gray */
+                    width: 20px; /* Adjust thickness */
+                    border-radius: 2px; /* Rounded edges */
+                }
+
 /* Buttons */
 QPushButton {
     background-color: #3E3E3E;

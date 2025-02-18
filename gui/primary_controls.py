@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QButtonGroup, QCheckBox, QComboBox)
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from controllers import model_maker
 from misc.random_items import label_maker
 import misc.file_handler
@@ -79,6 +80,7 @@ class RightHandController(QWidget):
         label.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         top_check_layout_v.addWidget(label)
 
+        # Make the graphs
         self.graph_list = []
         table_test = controllers.graph_controller.GraphWidget(title="Test", x_lab="time", y_lab="LMV",
                                                               data_controller=self.data_controller)
@@ -88,8 +90,15 @@ class RightHandController(QWidget):
                                                                     data_controller=self.data_controller)
         self.graph_list.append(force_time_graph)
 
+        pitch_graph = controllers.graph_controller.GraphWidget(title="Pitch", x_lab="time", y_lab="Pitch",
+                                                                    data_controller=self.data_controller
+                                                                    )
+        self.graph_list.append(pitch_graph)
+
+
         top_check_layout_v.addWidget(force_time_graph)
         top_check_layout_v.addWidget(table_test)
+        top_check_layout_v.addWidget(pitch_graph)
 
         top_check_layout_h = QHBoxLayout()
         top_check_layout_h.addWidget(opt1)

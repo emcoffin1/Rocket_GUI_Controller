@@ -3,7 +3,7 @@ from controllers import data_parser
 from PyQt6.QtCore import QObject, pyqtSignal, QThread
 import json
 import time
-from random import randrange
+import random
 from misc.file_handler import load_file
 
 config = load_file("data/config.json")
@@ -103,6 +103,8 @@ class DataController(QThread):
         self.esp_instance = esp_instance
         self.start_time = time.time()
         self.firing = False
+        self.angle_value = 0
+        self.angle_increasing = True
         if self.esp_instance:
             self.esp_instance.data_list.connect(self.process_real_data)
 
@@ -121,7 +123,8 @@ class DataController(QThread):
                     simulated_data = {
                         'time': [round(time.time()-self.start_time,2)],
                         'LMV': [self.simulated_sensor_value()],
-                        "Force": [self.simulated_sensor_value() / 5]
+                        "Force": [self.simulated_sensor_value() / 5],
+                        'Pitch': [self.simulated_angle_value()]
                     }
                     print(simulated_data)
                     self.data_signal.emit(simulated_data)
@@ -133,8 +136,19 @@ class DataController(QThread):
         self.running = False
 
     def simulated_sensor_value(self):
-        """Generates fake sensor reading for sims"""
-        return round(randrange(1, 6) * 0.18 + 5,2)
+        return round(random.uniform(1, 6), 2)
+
+    def simulated_angle_value(self):
+        """Oscillates between -180 and 180 degrees"""
+        if self.angle_increasing:
+            self.angle_value += 5
+            if self.angle_value >= 180:
+                self.angle_increasing = False
+        else:
+            self.angle_value -= 5
+            if self.angle_value <= -180:
+                self.angle_increasing = True
+        return self.angle_value
 
     def process_real_data(self, data):
         if USE_REAL_DATA and self.esp_instance and self.esp_instance.connected:
