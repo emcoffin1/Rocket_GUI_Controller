@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QLabel, QSizePolicy
 from PyQt6.QtGui import QFont
 
-def label_maker(text, style="Helvetica", size=20, weight=QFont.Weight.Medium, ital=False, color="black"):
+def label_maker(text, style="Helvetica", size=20, weight=QFont.Weight.Medium, ital=False, color="white"):
     """Creates a standard QLabel with customizable font, weight, and color."""
     label = QLabel(text)
 

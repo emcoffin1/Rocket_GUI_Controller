@@ -1,8 +1,10 @@
 import socket, threading
 from controllers import data_parser
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal, QThread
+import json
+import time
 
-
+USE_REAL_DATA = False
 
 class ESP32(QObject):
     """Handles ESP32 Signaling and Data Parsing"""
@@ -11,6 +13,7 @@ class ESP32(QObject):
     valve_state_S = pyqtSignal(dict)
     test_data_S = pyqtSignal(dict)
     warning_message_S = pyqtSignal(dict)
+
     def __init__(self, tcp_port, udp_port, ip):
         super().__init__()
 
@@ -104,3 +107,34 @@ class ESP32(QObject):
             if key in message:
                 signal.emit(message[key])
 
+
+
+class DataController(QThread):
+    data_signal = pyqtSignal(dict)  # Signal to send updated data
+
+    def __init__(self, esp_instance=None):
+        super().__init__()
+        self.running = True
+        self.esp_instance = esp_instance
+
+    def run(self):
+        while self.running:
+            try:
+                if USE_REAL_DATA and self.esp_instance:
+                    # Get real data from ESP
+                    self.esp_instance.sensor_readings.connect(self.data_signal.emit)
+
+                else:
+                    # Simulate real time data
+                    simulated_data = {"x": [time.time()], "y": [self.simulated_sensor_value()]}
+                    self.data_signal.emit(simulated_data)
+            except Exception as e:
+                print(f"Error reading JSON: {e}")
+            time.sleep(1)  # Adjust based on how frequently you receive data
+
+    def stop(self):
+        self.running = False
+
+    def simulated_sensor_value(self):
+        """Generates fake sensor reading for sims"""
+        return round(time.time() % 10, 2)

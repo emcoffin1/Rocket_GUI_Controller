@@ -2,6 +2,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QButt
 from PyQt6.QtCore import Qt
 from controllers import model_maker
 from misc.random_items import label_maker
+import misc.file_handler
+import controllers.graph_controller
 
 
 
@@ -53,7 +55,6 @@ class RightHandController(QWidget):
         right_panel.setLayout(right_layout)
 
         # Items
-        rocket = model_maker.Rocket3DWidget()
         option_panel = QButtonGroup()
 
         # // GRAPH SIDE // #
@@ -94,9 +95,17 @@ class RightHandController(QWidget):
         right_layout.addWidget(combo)
 
         # Rocket
-        right_layout.addWidget(rocket, alignment=Qt.AlignmentFlag.AlignHCenter)
+        pitch_file = misc.file_handler.get_file_path("data/images/rocket_side_profile_pointed.png")
+        rocket_pitch = model_maker.Rocket2DImagePitch(image_path=str(pitch_file), rotate_start=90)
+        right_layout.addWidget(rocket_pitch, alignment=Qt.AlignmentFlag.AlignHCenter)
+        pitch_label = label_maker("Pitch", size=10)
+        right_layout.addWidget(pitch_label, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-
+        roll_file = misc.file_handler.get_file_path("data/images/rocket_top_profile.png")
+        rocket_roll = model_maker.Rocket2DImagePitch(image_path=str(roll_file), scale=0.5)
+        right_layout.addWidget(rocket_roll, alignment=Qt.AlignmentFlag.AlignHCenter)
+        roll_label = label_maker("Roll", size=10)
+        right_layout.addWidget(roll_label, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         # // Splitter and layout format // #
         right_layout.addStretch(1)
@@ -121,6 +130,10 @@ class LeftHandController(QWidget):
         # // ITEMS // #
         label = label_maker(text="TEST")
         right_layout.addWidget(label)
+
+        table_test = controllers.graph_controller.GraphWidget(title="Test", x_lab="time", y_lab="Pressure",
+                                                              x=[0,2,4,4,5,6,6,7,7,8,9,10,13,15,18,19,20,21,22], y=[4,6,8,10,13,4,5,7,8,9,5,3,6,8,9,1,4,6,6])
+        right_layout.addWidget(table_test)
 
         self.setLayout(right_layout)
 

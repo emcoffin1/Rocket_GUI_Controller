@@ -1,6 +1,10 @@
 /* Window */
 QMainWindow {
-    background-color: #2B2B2B;
+    background-color: #242424;
+    color: #E0E0E0;
+}
+QTabWidget {
+    background-color: #242424;
     color: #E0E0E0;
 }
 

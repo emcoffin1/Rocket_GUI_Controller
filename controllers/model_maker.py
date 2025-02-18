@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy
-from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSlider
+from PyQt6.QtCore import QTimer, Qt, QPointF
+from PyQt6.QtGui import QPainter, QBrush, QColor, QTransform, QPixmap
 import pyqtgraph.opengl as gl
 import time
 import numpy as np
@@ -122,3 +123,153 @@ class Rocket3DWidget(QWidget):
     def toggle_fallback_mode(self):
         """Manually triggers the fallback mode for slow autorotation."""
         self.fallback_mode = not self.fallback_mode
+
+
+class Rocket2DWidget_Pitch(QWidget):
+    def __init__(self, pitch_angle=0):
+        super().__init__()
+        self.pitch_angle = pitch_angle  # Start with a neutral pitch
+
+        self.setMinimumSize(50, 100)
+
+    def set_pitch(self, angle):
+        """Updates the pitch and refreshes the widget"""
+        self.pitch_angle = angle
+        self.update()  # Triggers a repaint
+
+    def paintEvent(self, event):
+        """Handles drawing the rocket with rotation"""
+        print("Paint")
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # === Get Widget Center ===
+        center_x = self.width() // 2
+        center_y = self.height() // 2
+
+        # === Apply Rotation Transformation ===
+        transform = QTransform()
+        transform.translate(center_x, center_y)  # Move pivot point to center
+        transform.rotate(self.pitch_angle)  # Rotate around pivot
+        transform.translate(-center_x, -center_y)  # Move back
+
+        painter.setTransform(transform)
+
+        # === Draw Rocket Body (Rectangle) ===
+        rocket_width = 40
+        rocket_height = 100
+
+        body_rect = (center_x - rocket_width // 2, center_y - rocket_height // 2, rocket_width, rocket_height)
+
+        painter.setBrush(QBrush(QColor("gray")))
+        painter.drawRect(*body_rect)
+
+        # === Draw Rocket Nose (Triangle) ===
+        nose_points = [
+            QPointF(center_x, center_y - rocket_height // 2 - 20),  # Top Point
+            QPointF(center_x - rocket_width // 2, center_y - rocket_height // 2),  # Bottom Left
+            QPointF(center_x + rocket_width // 2, center_y - rocket_height // 2)  # Bottom Right
+        ]
+
+        painter.setBrush(QBrush(QColor("red")))
+        painter.drawPolygon(*nose_points)
+
+        # === Draw Rocket Fins (Two Small Triangles) ===
+        fin_size = 15
+        fin_height = 30
+
+        left_fin = [
+            QPointF(center_x - rocket_width // 2, center_y + rocket_height // 2),  # Top
+            QPointF(center_x - rocket_width // 2 - fin_size, center_y + rocket_height // 2 + fin_height),  # Bottom Left
+            QPointF(center_x - rocket_width // 2, center_y + rocket_height // 2 + fin_height)  # Bottom Right
+        ]
+
+        right_fin = [
+            QPointF(center_x + rocket_width // 2, center_y + rocket_height // 2),  # Top
+            QPointF(center_x + rocket_width // 2 + fin_size, center_y + rocket_height // 2 + fin_height),
+            # Bottom Right
+            QPointF(center_x + rocket_width // 2, center_y + rocket_height // 2 + fin_height)  # Bottom Left
+        ]
+
+        painter.setBrush(QBrush(QColor("darkblue")))
+        painter.drawPolygon(*left_fin)
+        painter.drawPolygon(*right_fin)
+
+        painter.end()
+
+
+
+class Rocket2DImagePitch(QWidget):
+    def __init__(self, image_path, scale=0.25, pitch_angle=0, rotate_start=0, color=None):
+        super().__init__()
+        self.scale = scale
+        self.iterate = 0
+        self.image = QPixmap(image_path)
+        self.pitch_angle = pitch_angle  # Initial pitch
+
+        #  Rotate image -90° (90° counterclockwise) at start
+        transform = QTransform()
+        transform.rotate(rotate_start)  # Counterclockwise rotation
+        self.image = self.image.transformed(transform)
+
+        #  Resize Image
+        new_w = int(self.image.width() * scale)
+        new_h = int(self.image.height() * scale)
+        self.image = self.image.scaled(new_w, new_h)
+
+        #  Ensure it shows up
+        self.setMinimumSize(self.image.height(), self.image.height())
+
+        # Create color mask
+        if color:
+            colored_image = self.image.copy()
+            painter_image = QPainter(colored_image)
+
+            # Set color
+            color = QColor("darkblue")
+            painter_image.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+            painter_image.fillRect(colored_image.rect(), color)
+            painter_image.end()
+
+            # Save image
+            self.image = colored_image
+
+        self.start_timer()
+
+    def change_pitch(self, esp=False):
+        """Increase pitch angle by 1 degree every 2 seconds"""
+        if not esp:
+            if self.iterate == 1:
+                self.pitch_angle += 5
+                self.iterate = 0
+            else:
+                self.pitch_angle -= 5
+                self.iterate = 1
+        self.update()
+
+    def paintEvent(self, event):
+        """Draw the rotated image"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Get image center for pivot
+        center_x = self.width() // 2
+        center_y = self.height() // 2
+
+        # Apply rotation
+        painter.translate(center_x, center_y)
+        painter.rotate(self.pitch_angle)
+        painter.translate(-center_x, -center_y)
+
+
+        img_x = center_x - self.image.width() // 2
+        img_y = center_y - self.image.height() // 2
+        painter.drawPixmap(img_x, img_y, self.image)
+
+        painter.end()
+
+    def start_timer(self):
+        """Start a timer that updates the pitch every 2 seconds"""
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.change_pitch)
+        self.timer.start(100)
