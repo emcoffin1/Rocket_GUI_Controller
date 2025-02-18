@@ -29,16 +29,26 @@ class MainWindow(QMainWindow):
             QApplication.instance().setStyleSheet(styleSheet)
 
         # Wi-Fi Access Point
-        wifi = wifi_controller.ESP32(tcp_port=config["TCP_PORT"], udp_port=config["UDP_PORT"],
+        self.esp = wifi_controller.ESP32(tcp_port=config["TCP_PORT"], udp_port=config["UDP_PORT"],
                                           ip=config["ESP32_IP"])
+        self.data_controller = wifi_controller.DataController(esp_instance=self.esp)
+        self.data_controller.data_signal.connect(self.handle_new_data)
+        self.data_controller.start()
+
 
         # Init tabs
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
         # Create Tabs
-        self.primary_controls = primary_controls.PrimaryWindow(esp32=wifi, config=config)
+        self.primary_controls = primary_controls.PrimaryWindow(esp32=self.esp, config=config,
+                                                               data_controller=self.data_controller)
         self.options_tab = None
 
         # Add tabs
         self.tabs.addTab(self.primary_controls, "Controller")
         self.tabs.addTab(self.options_tab, "Options")
+
+
+    def handle_new_data(self, data):
+        """Handles incoming data and updates UI components"""
+        self.primary_controls.update_from_data(data)

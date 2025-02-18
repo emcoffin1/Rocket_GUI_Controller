@@ -122,11 +122,11 @@ class DataController(QThread):
             try:
                 if USE_REAL_DATA and self.esp_instance:
                     # Get real data from ESP
-                    self.esp_instance.sensor_readings.connect(self.data_signal.emit)
+                    self.esp_instance.sensor_readings.connect(self.process_real_data)
 
                 else:
                     # Simulate real time data
-                    simulated_data = {"x": [time.time()], "y": [self.simulated_sensor_value()]}
+                    simulated_data = {"time": [time.time()], "LMX": [self.simulated_sensor_value()], "FORCE":[self.simulated_sensor_value()/5]}
                     self.data_signal.emit(simulated_data)
             except Exception as e:
                 print(f"Error reading JSON: {e}")
@@ -138,3 +138,7 @@ class DataController(QThread):
     def simulated_sensor_value(self):
         """Generates fake sensor reading for sims"""
         return round(time.time() % 10, 2)
+
+    def process_real_data(self, data):
+        self.data_signal.emit(data)
+

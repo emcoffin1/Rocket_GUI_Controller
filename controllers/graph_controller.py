@@ -6,9 +6,13 @@ import matplotlib.pyplot as plt
 
 
 class GraphWidget(QWidget):
-    def __init__(self, title=None, x_lab=None, y_lab=None, parent=None, bg_color='#242424', x=None, y=None,
+    def __init__(self, data_controller, title=None, x_lab=None, y_lab=None, parent=None, bg_color='#242424', x=None, y=None,
                  time_window=10):
         super().__init__(parent)
+        self.data_controller = data_controller
+        if self.data_controller:
+            self.data_controller.data_signal.connect(self.handle_new_data)
+
 
         self.figure, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.figure)
@@ -40,6 +44,10 @@ class GraphWidget(QWidget):
         self.canvas.mpl_connect("button_press_event", self.on_mouse_press)
 
         self.plot_graph()
+
+    def handle_new_data(self, data):
+        if self.x_l in data and self.y_l in data:
+            self.update_data(data[self.x_l], data[self.y_l])
 
     def on_mouse_press(self, event):
         """Detects if the user has clicked to pan or zoom, stopping auto-scroll."""

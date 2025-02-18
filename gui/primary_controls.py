@@ -8,12 +8,13 @@ import controllers.graph_controller
 
 
 class PrimaryWindow(QWidget):
-    def __init__(self, esp32, config):
+    def __init__(self, esp32, config, data_controller):
         super().__init__()
         """Primary tab for displaying all rocket info"""
         # // INIT Random // #
         esp32 = esp32
         config = config
+        self.data_controller = data_controller
         # Ensure size is max
 
         # INIT Layout
@@ -24,7 +25,7 @@ class PrimaryWindow(QWidget):
 
         # Widgets for splitter
         right_side = RightHandController()
-        left_side = LeftHandController()
+        left_side = LeftHandController(data_controller=self.data_controller)
         center_splitter.addWidget(left_side)
         center_splitter.addWidget(right_side)
 
@@ -35,6 +36,9 @@ class PrimaryWindow(QWidget):
         self.layout.addWidget(center_splitter)
         # Set layout
         self.setLayout(self.layout)
+
+    def update_from_data(self, data):
+        print(f"Updting data: {data}")
 
 
 class RightHandController(QWidget):
@@ -120,10 +124,10 @@ class RightHandController(QWidget):
 
 
 class LeftHandController(QWidget):
-    def __init__(self):
+    def __init__(self, data_controller):
         super().__init__()
         """Forms the left side controller with values"""
-
+        self.data_controller = data_controller
         # // Main Window // #
         right_layout = QVBoxLayout()
 
@@ -131,8 +135,10 @@ class LeftHandController(QWidget):
         label = label_maker(text="TEST")
         right_layout.addWidget(label)
 
-        table_test = controllers.graph_controller.GraphWidget(title="Test", x_lab="time", y_lab="Pressure",
-                                                              x=[0,2,4,4,5,6,6,7,7,8,9,10,13,15,18,19,20,21,22], y=[4,6,8,10,13,4,5,7,8,9,5,3,6,8,9,1,4,6,6])
+        table_test = controllers.graph_controller.GraphWidget(title="Test", x_lab="time", y_lab="LMV",
+                                                              data_controller=self.data_controller,
+                                                              x=[0,2,4,4,5,6,6,7,7,8,9,10,13,15,18,19,20,21,22],
+                                                              y=[4,6,8,10,13,4,5,7,8,9,5,3,6,8,9,1,4,6,6])
         right_layout.addWidget(table_test)
 
         self.setLayout(right_layout)
