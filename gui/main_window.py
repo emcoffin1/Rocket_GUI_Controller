@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QLabel, QPushButton,
                              QVBoxLayout, QHBoxLayout, QTabWidget, QSizePolicy)
-
+from PyQt6.QtCore import Qt
 from controllers import wifi_controller
 from misc import file_handler
 from gui import primary_controls
@@ -12,7 +12,8 @@ class MainWindow(QMainWindow):
         # // Main Window Settings // #
         # Screen Size
         self.showMaximized()
-        self.setMinimumSize(1200, 800)
+        self.setMinimumSize(1400, 800)
+        self.setWindowState(Qt.WindowState.WindowMaximized)
 
         # App Title
         self.setWindowTitle("FARTS/PEAR")
@@ -32,7 +33,6 @@ class MainWindow(QMainWindow):
         self.esp = wifi_controller.ESP32(tcp_port=config["TCP_PORT"], udp_port=config["UDP_PORT"],
                                           ip=config["ESP32_IP"])
         self.data_controller = wifi_controller.DataController(esp_instance=self.esp)
-        self.data_controller.data_signal.connect(self.handle_new_data)
         self.data_controller.start()
 
 
@@ -49,6 +49,3 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.options_tab, "Options")
 
 
-    def handle_new_data(self, data):
-        """Handles incoming data and updates UI components"""
-        self.primary_controls.update_from_data(data)

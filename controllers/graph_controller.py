@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy)
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -10,6 +10,7 @@ class GraphWidget(QWidget):
                  time_window=10):
         super().__init__(parent)
         self.data_controller = data_controller
+        self.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
         if self.data_controller:
             self.data_controller.data_signal.connect(self.handle_new_data)
 
@@ -17,7 +18,7 @@ class GraphWidget(QWidget):
         self.figure, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)  # Compact toolbar
-        self.toolbar.setFixedHeight(25)  # Reduce toolbar size
+        self.toolbar.setFixedHeight(20)  # Reduce toolbar size
         self.figure.patch.set_facecolor(bg_color)
         self.ax.set_facecolor(bg_color)
 
@@ -63,12 +64,14 @@ class GraphWidget(QWidget):
             if not self.manual_scroll:
                 latest_time = self.x_data[-1]
                 start_time = max(0, latest_time - self.time_window)
-                self.ax.set_xlim(start_time, latest_time)
+                self.ax.set_xlim(start_time-1, latest_time)
 
         self.ax.set_title(f"{self.title}", color='white', fontsize=14)
         self.ax.set_xlabel(f"{self.x_l}", color='white', fontsize=12)
         self.ax.set_ylabel(f"{self.y_l}", color='white', fontsize=12)
         self.ax.tick_params(colors='white', labelsize=10)
+
+        self.figure.tight_layout(pad=0.5)
 
         self.canvas.draw()
 

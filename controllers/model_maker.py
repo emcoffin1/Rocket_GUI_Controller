@@ -139,7 +139,6 @@ class Rocket2DWidget_Pitch(QWidget):
 
     def paintEvent(self, event):
         """Handles drawing the rocket with rotation"""
-        print("Paint")
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 

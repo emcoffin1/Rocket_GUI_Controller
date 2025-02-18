@@ -3,16 +3,16 @@ from controllers import data_parser
 from PyQt6.QtCore import QObject, pyqtSignal, QThread
 import json
 import time
+from random import randrange
+from misc.file_handler import load_file
 
-USE_REAL_DATA = False
+config = load_file("data/config.json")
+USE_REAL_DATA = config["USE_REAL_DATA"]
 
 class ESP32(QObject):
     """Handles ESP32 Signaling and Data Parsing"""
     # List of Signals to emit when data is parsed
-    sensor_readings_S = pyqtSignal(dict)
-    valve_state_S = pyqtSignal(dict)
-    test_data_S = pyqtSignal(dict)
-    warning_message_S = pyqtSignal(dict)
+    data_list = pyqtSignal(dict)
 
     def __init__(self, tcp_port, udp_port, ip):
         super().__init__()
@@ -72,11 +72,11 @@ class ESP32(QObject):
             try:
                 data, addr = self.udp_socket.recv(1024)     # Buffer size
                 data = data.decode()
-                self.separator(data)
+                self.data_list.emit(data)
 
 
             except Exception as e:
-                print(e)
+                print(f"recieve_message:{e}")
                 break
 
     def send_message(self, command):
@@ -92,21 +92,6 @@ class ESP32(QObject):
             except Exception as e:
                 print(e)
 
-    def separator(self, message):
-        """Parses data into usable commands/info"""
-        # List of available options
-        signal_map = {
-            "VALVES": self.valve_state_S,
-            "SENSOR": self.sensor_readings_S,
-            "TEST": self.test_data_S,
-            "WARNING": self.warning_message_S,
-        }
-
-        # Circulate through your options
-        for key, signal in signal_map.items():
-            if key in message:
-                signal.emit(message[key])
-
 
 
 class DataController(QThread):
@@ -116,20 +101,32 @@ class DataController(QThread):
         super().__init__()
         self.running = True
         self.esp_instance = esp_instance
+        self.start_time = time.time()
+        self.firing = False
+        if self.esp_instance:
+            self.esp_instance.data_list.connect(self.process_real_data)
+
 
     def run(self):
         while self.running:
             try:
-                if USE_REAL_DATA and self.esp_instance:
-                    # Get real data from ESP
-                    self.esp_instance.sensor_readings.connect(self.process_real_data)
+                if USE_REAL_DATA:
+                    if self.esp_instance and self.esp_instance.connected:
+                        pass    # Data will be recieved from ESP32
 
+                    else:
+                        pass
+                        # Get real data from ESP
                 else:
-                    # Simulate real time data
-                    simulated_data = {"time": [time.time()], "LMX": [self.simulated_sensor_value()], "FORCE":[self.simulated_sensor_value()/5]}
+                    simulated_data = {
+                        'time': [round(time.time()-self.start_time,2)],
+                        'LMV': [self.simulated_sensor_value()],
+                        "Force": [self.simulated_sensor_value() / 5]
+                    }
+                    print(simulated_data)
                     self.data_signal.emit(simulated_data)
             except Exception as e:
-                print(f"Error reading JSON: {e}")
+                print(f"datacontroller: {e}")
             time.sleep(1)  # Adjust based on how frequently you receive data
 
     def stop(self):
@@ -137,8 +134,10 @@ class DataController(QThread):
 
     def simulated_sensor_value(self):
         """Generates fake sensor reading for sims"""
-        return round(time.time() % 10, 2)
+        return round(randrange(1, 6) * 0.18 + 5,2)
 
     def process_real_data(self, data):
-        self.data_signal.emit(data)
+        if USE_REAL_DATA and self.esp_instance and self.esp_instance.connected:
+            self.data_signal.emit(data)
+
 

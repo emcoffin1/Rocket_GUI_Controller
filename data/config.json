@@ -2,6 +2,7 @@
   "ESP32_IP": "192.168.4.1",
   "TCP_PORT": 80,
   "UDP_PORT": 81,
+  "USE_REAL_DATA": 0,
   "SENSORS": ["High Press 1",
               "High Press 2",
               "LOX Tank 1",

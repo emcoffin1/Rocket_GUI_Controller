@@ -24,7 +24,7 @@ class PrimaryWindow(QWidget):
         center_splitter = QSplitter(Qt.Orientation.Horizontal)
 
         # Widgets for splitter
-        right_side = RightHandController()
+        right_side = RightHandController(data_controller=self.data_controller)
         left_side = LeftHandController(data_controller=self.data_controller)
         center_splitter.addWidget(left_side)
         center_splitter.addWidget(right_side)
@@ -38,13 +38,13 @@ class PrimaryWindow(QWidget):
         self.setLayout(self.layout)
 
     def update_from_data(self, data):
-        print(f"Updting data: {data}")
-
+        pass
 
 class RightHandController(QWidget):
-    def __init__(self):
+    def __init__(self, data_controller):
         super().__init__()
         """Will form the graph and location for 3d model"""
+        self.data_controller = data_controller
         # Splitter
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
 
@@ -78,6 +78,18 @@ class RightHandController(QWidget):
         label = label_maker(text="GRAPHS")
         label.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         top_check_layout_v.addWidget(label)
+
+        self.graph_list = []
+        table_test = controllers.graph_controller.GraphWidget(title="Test", x_lab="time", y_lab="LMV",
+                                                              data_controller=self.data_controller)
+        self.graph_list.append(table_test)
+
+        force_time_graph = controllers.graph_controller.GraphWidget(title="Force v Time", x_lab="time", y_lab='Force',
+                                                                    data_controller=self.data_controller)
+        self.graph_list.append(force_time_graph)
+
+        top_check_layout_v.addWidget(force_time_graph)
+        top_check_layout_v.addWidget(table_test)
 
         top_check_layout_h = QHBoxLayout()
         top_check_layout_h.addWidget(opt1)
@@ -122,12 +134,24 @@ class RightHandController(QWidget):
         main_layout.addWidget(main_splitter)
         self.setLayout(main_layout)
 
+        # Connect datacontroller signal to graphs
+        self.data_controller.data_signal.connect(self.update_graphs)
+
+    def update_graphs(self, data):
+        """Checks if new data has relevant keys for graph and update"""
+        for graph in self.graph_list:
+            if graph.x_l in data and graph.y_l in data:
+                graph.update_data(data[graph.x_l], data[graph.y_l])
+
 
 class LeftHandController(QWidget):
     def __init__(self, data_controller):
         super().__init__()
         """Forms the left side controller with values"""
+        # Data updater
         self.data_controller = data_controller
+
+
         # // Main Window // #
         right_layout = QVBoxLayout()
 
@@ -135,13 +159,15 @@ class LeftHandController(QWidget):
         label = label_maker(text="TEST")
         right_layout.addWidget(label)
 
-        table_test = controllers.graph_controller.GraphWidget(title="Test", x_lab="time", y_lab="LMV",
-                                                              data_controller=self.data_controller,
-                                                              x=[0,2,4,4,5,6,6,7,7,8,9,10,13,15,18,19,20,21,22],
-                                                              y=[4,6,8,10,13,4,5,7,8,9,5,3,6,8,9,1,4,6,6])
-        right_layout.addWidget(table_test)
+        self.graph_list = []
+        # Connect datacontroller signal to graphs
+        self.data_controller.data_signal.connect(self.update_graphs)
 
-        self.setLayout(right_layout)
+    def update_graphs(self, data):
+        """Checks if new data has relevant keys for graph and update"""
+        for graph in self.graph_list:
+            if graph.x_l in data and graph.y_l in data:
+                graph.update_data(data[graph.x_l], data[graph.y_l])
 
 
 
